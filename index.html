@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relay企業コミュニケーション診断テスト</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Hiragino Sans', 'Yu Gothic', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        
+        .question {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .question.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .question h3 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .option {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .option:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+        }
+        
+        .option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #5a67d8;
+        }
+        
+        .btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        
+        .results {
+            display: none;
+            text-align: center;
+        }
+        
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(#667eea 0deg, #667eea var(--score-angle), #e2e8f0 var(--score-angle));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            position: relative;
+        }
+        
+        .score-circle::before {
+            content: '';
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: white;
+            position: absolute;
+        }
+        
+        .score-text {
+            position: relative;
+            z-index: 1;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .recommendation {
+            background: #f0f8ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .plan-suggestion {
+            background: #e8f5e8;
+            border: 2px solid #48bb78;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .estimate {
+            background: #fff5f5;
+            border: 2px solid #f56565;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .contact-form {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .test-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>企業コミュニケーション診断テスト</h1>
+            <p>あなたの会社のコミュニケーション課題を診断し、最適なRelayプランをご提案します</p>
+        </div>
+        
+        <div class="test-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div id="questionsContainer">
+                <div class="question active" data-question="1">
+                    <h3>Q1. 御社の従業員数はどのくらいですか？</h3>
+                    <div class="options">
+                        <div class="option" data-value="1">10名以下</div>
+                        <div class="option" data-value="2">11-30名</div>
+                        <div class="option" data-value="3">31-100名</div>
+                        <div class="option" data-value="4">101名以上</div>
+                    </div>
+                </div>
+                
+                <div class="question" data-question="2">
+                    <h3>Q2. 現在の社内コミュニケーションについて、どの程度満足していますか？</h3>
+                    <div class="options">
+                        <div class="option" data-value="1">非常に満足している</div>
+                        <div class="option" data-value="2">まあ満足している</div>
+                        <div class="option" data-value="3">やや不満がある</div>
+                        <div class="option" data-value="4">大いに不満がある</div>
+                    </div>
+                </div>
+                
+                <div class="question" data-question="3">
+                    <h3>Q3. 年に何回程度、社内イベント（懇親会・レクリエーション等）を開催していますか？</h3>
+                    <div class="options">
+                        <div class="option" data-value="1">開催していない</div>
+                        <div class="option" data-value="2">年1-2回</div>
+                        <div class="option" data-value="3">年3-6回</div>
+                        <div class="option" data-value="4">月1回以上</div>
+                    </div>
+                </div>
+                
+                <div class="question" data-question="4">
+                    <h3>Q4. 現在行っている社内イベントで最も多いのはどのタイプですか？</h3>
+                    <div class="options">
+                        <div class="option" data-value="1">飲み会・懇親会</div>
+                        <div class="option" data-value="2">ボーリング・カラオケ</div>
+                        <div class="option" data-value="3">スポーツ系イベント</div>
+                        <div class="option" data-value="4">特に決まった形式はない</div>
+                    </div>
+                </div>
+                
+                <div class="question" data-question="5">
+                    <h3>Q5. 社内イベントでの課題は何ですか？（最も当てはまるもの）</h3>
+                    <div class="options">
+                        <div class="option" data-value="1">参加率が低い</div>
+                        <div class="option" data-value="2">企画がマンネリ化している</div>
+                        <div class="option" data-value="3">準備の負担が大きい</div>
+                        <div class="option" data-value="4">コミュニケーション効果が感じられない</div>
+                    </div>
+                </div>
+                
+                <div class="question" data-question="6">
+                    <h3>Q6. リモートワークの導入状況はいかがですか？</h3>
+                    <div class="options">
+                        <div class="option" data-value="1">完全出社制</div>
+                        <div class="option" data-value="2">ハイブリッド（出社とリモートの組み合わせ）</div>
+                        <div class="option" data-value="3">原則リモートワーク</div>
+                        <div class="option" data-value="4">部署によって異なる</div>
+                    </div>
+                </div>
+                
+                <div class="question" data-question="7">
+                    <h3>Q7. 採用活動において、どのような課題をお感じですか？</h3>
+                    <div class="options">
+                        <div class="option" data-value="1">応募者が少ない</div>
+                        <div class="option" data-value="2">企業文化が伝わりにくい</div>
+                        <div class="option" data-value="3">若手の定着率が低い</div>
+                        <div class="option" data-value="4">特に課題は感じていない</div>
+                    </div>
+                </div>
+                
+                <div class="question" data-question="8">
+                    <h3>Q8. 社内イベントの予算として、年間どの程度を想定されていますか？</h3>
+                    <div class="options">
+                        <div class="option" data-value="1">20万円未満</div>
+                        <div class="option" data-value="2">20-50万円</div>
+                        <div class="option" data-value="3">50-100万円</div>
+                        <div class="option" data-value="4">100万円以上</div>
+                    </div>
+                </div>
+                
+                <div class="question" data-question="9">
+                    <h3>Q9. 新しい形の社内レクリエーションに対する関心度はいかがですか？</h3>
+                    <div class="options">
+                        <div class="option" data-value="1">非常に関心がある</div>
+                        <div class="option" data-value="2">やや関心がある</div>
+                        <div class="option" data-value="3">あまり関心がない</div>
+                        <div class="option" data-value="4">現状維持で十分</div>
+                    </div>
+                </div>
+                
+                <div class="question" data-question="10">
+                    <h3>Q10. 映像制作（採用PR動画など）への関心はいかがですか？</h3>
+                    <div class="options">
+                        <div class="option" data-value="1">非常に関心がある</div>
+                        <div class="option" data-value="2">やや関心がある</div>
+                        <div class="option" data-value="3">あまり関心がない</div>
+                        <div class="option" data-value="4">不要だと思う</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button class="btn" id="prevBtn" onclick="previousQuestion()" disabled>前へ</button>
+                <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>次へ</button>
+            </div>
+            
+            <div class="results" id="results">
+                <h2>診断結果</h2>
+                <div class="score-circle" id="scoreCircle">
+                    <div class="score-text" id="scoreText">0%</div>
+                </div>
+                
+                <div class="recommendation" id="recommendation"></div>
+                <div class="plan-suggestion" id="planSuggestion"></div>
+                <div class="estimate" id="estimate"></div>
+                
+                <div class="contact-form">
+                    <h3>詳細なご相談をご希望の方</h3>
+                    <p>診断結果をもとに、ZOOMまたは訪問での詳細打合せを承ります</p>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>会社名 *</label>
+                            <input type="text" id="companyName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>お名前 *</label>
+                            <input type="text" id="contactName" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>メールアドレス *</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>電話番号</label>
+                            <input type="tel" id="phone">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>希望する打合せ方法</label>
+                        <select id="meetingType">
+                            <option value="zoom">ZOOM会議</option>
+                            <option value="visit">訪問打合せ</option>
+                            <option value="both">どちらでも可</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ご質問・ご要望</label>
+                        <textarea id="message" rows="4" placeholder="診断結果について、具体的な実施時期、その他ご質問など"></textarea>
+                    </div>
+                    
+                    <button class="btn" onclick="submitContactForm()" style="width: 100%; margin-top: 20px;">
+                        詳細打合せを申し込む
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 1;
+        let totalQuestions = 10;
+        let answers = {};
+        
+        function updateProgress() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+        
+        function showQuestion(questionNumber) {
+            document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
+            document.querySelector(`[data-question="${questionNumber}"]`).classList.add('active');
+            
+            document.getElementById('prevBtn').disabled = questionNumber === 1;
+            
+            if (questionNumber === totalQuestions) {
+                document.getElementById('nextBtn').textContent = '結果を見る';
+            } else {
+                document.getElementById('nextBtn').textContent = '次へ';
+            }
+            
+            document.getElementById('nextBtn').disabled = !answers[questionNumber];
+        }
+        
+        function nextQuestion() {
+            if (currentQuestion < totalQuestions) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+                updateProgress();
+            } else {
+                showResults();
+            }
+        }
+        
+        function previousQuestion() {
+            if (currentQuestion > 1) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+                updateProgress();
+            }
+        }
+        
+        function showResults() {
+            document.getElementById('questionsContainer').style.display = 'none';
+            document.querySelector('.navigation').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            
+            calculateResults();
+        }
+        
+        function calculateResults() {
+            let score = 0;
+            let maxScore = 0;
+            
+            Object.keys(answers).forEach(q => {
+                const answer = parseInt(answers[q]);
+                if (q == 1) {
+                    score += answer * 2;
+                    maxScore += 8;
+                } else if (q == 2) {
+                    score += (5 - answer) * 3;
+                    maxScore += 12;
+                } else if (q == 5) {
+                    score += answer * 2;
+                    maxScore += 8;
+                } else if (q == 9 || q == 10) {
+                    score += answer * 2;
+                    maxScore += 8;
+                } else {
+                    score += answer;
+                    maxScore += 4;
+                }
+            });
+            
+            const finalScore = Math.round((score / maxScore) * 100);
+            
+            document.getElementById('scoreText').textContent = finalScore + '%';
+            document.getElementById('scoreCircle').style.setProperty('--score-angle', (finalScore * 3.6) + 'deg');
+            
+            generateRecommendation(finalScore);
+        }
+        
+        function generateRecommendation(score) {
+            let recommendation = '';
+            let planSuggestion = '';
+            let estimate = '';
+            
+            if (score >= 75) {
+                recommendation = `
+                    <h4>🎯 高い改善ニーズが診断されました</h4>
+                    <p>御社は社内コミュニケーションの改善に積極的で、新しい取り組みへの関心も高いことがわかりました。
+                    Relayの多角的なアプローチが、御社の更なる発展に大きく貢献できると考えます。</p>
+                `;
+                planSuggestion = `
+                    <h4>🌟 推奨プラン：プレミアムプラン</h4>
+                    <p><strong>理由：</strong> 映像制作による採用PR強化とアスリート派遣による特別感のあるイベントで、
+                    社内外への効果的な発信が可能です。</p>
+                    <ul style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                        <li>レクリエーション実施（5時間程度）</li>
+                        <li>採用・社内報用動画制作</li>
+                        <li>アスリート派遣</li>
+                        <li>MC・進行サポート</li>
+                    </ul>
+                `;
+                estimate = `
+                    <h4>💰 お見積りについて</h4>
+                    <p>お客様の予算とご要望に合わせた詳細なお見積りをご提案いたします。</p>
+                    <p>お気軽にお問い合わせください。</p>
+                `;
+            } else if (score >= 50) {
+                recommendation = `
+                    <h4>⚡ 中程度の改善効果が期待できます</h4>
+                    <p>御社では既存の取り組みをベースに、より効果的なコミュニケーション向上策を
+                    導入することで大きな変化を実感していただけると思います。</p>
+                `;
+                planSuggestion = `
+                    <h4>✨ 推奨プラン：スタンダードプラン</h4>
+                    <p><strong>理由：</strong> 十分な時間をかけてしっかりとした交流を図りながら、
+                    コストパフォーマンスの良い改善効果を実現できます。</p>
+                    <ul style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                        <li>レクリエーション実施（5時間程度）</li>
+                        <li>昼食を挟んだ充実プログラム</li>
+                        <li>アンケート・効果測定</li>
+                        <li>アスリート派遣オプション</li>
+                    </ul>
+                `;
+                estimate = `
+                    <h4>💰 お見積りについて</h4>
+                    <p>お客様の予算とご要望に合わせた詳細なお見積りをご提案いたします。</p>
+                    <p>お気軽にお問い合わせください。</p>
+                `;
+            } else {
+                recommendation = `
+                    <h4>🌱 スモールスタートがおすすめです</h4>
+                    <p>まずは気軽に体験していただけるプランから始めて、効果を実感していただいた後に
+                    本格導入をご検討いただくのが良いかもしれません。</p>
+                `;
+                planSuggestion = `
+                    <h4>🚀 推奨プラン：ライトプラン</h4>
+                    <p><strong>理由：</strong> トライアル導入として最適で、短時間で気軽に新しい
+                    コミュニケーション手法を体験していただけます。</p>
+                    <ul style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                        <li>レクリエーション実施（3時間程度）</li>
+                        <li>午前または午後のショートプログラム</li>
+                        <li>効果測定・報告書作成</li>
+                    </ul>
+                `;
+                estimate = `
+                    <h4>💰 お見積りについて</h4>
+                    <p>お客様の予算とご要望に合わせた詳細なお見積りをご提案いたします。</p>
+                    <p>体験会もご用意しておりますので、お気軽にお問い合わせください。</p>
+                `;
+            }
+            
+            document.getElementById('recommendation').innerHTML = recommendation;
+            document.getElementById('planSuggestion').innerHTML = planSuggestion;
+            document.getElementById('estimate').innerHTML = estimate;
+        }
+        
+        function submitContactForm() {
+            const formData = {
+                companyName: document.getElementById('companyName').value,
+                contactName: document.getElementById('contactName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                meetingType: document.getElementById('meetingType').value,
+                message: document.getElementById('message').value,
+                diagnosisScore: document.getElementById('scoreText').textContent,
+                recommendedPlan: getPlanFromScore(),
+                answers: getAnswersText(),
+                timestamp: new Date().toLocaleString('ja-JP')
+            };
+            
+            if (!formData.companyName || !formData.contactName || !formData.email) {
+                alert('必須項目を入力してください。');
+                return;
+            }
+            
+            emailjs.init('aTvoZagCwtwRUj_ti');
+            
+            const submitBtn = event.target;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '送信中...';
+            
+            emailjs.send(
+                'service_965a3ls',
+                'template_79z1vyg',
+                {
+                    to_email: 'miraigoto34@gmail.com',
+                    company_name: formData.companyName,
+                    contact_name: formData.contactName,
+                    from_email: formData.email,
+                    phone: formData.phone,
+                    meeting_type: formData.meetingType,
+                    message: formData.message,
+                    diagnosis_score: formData.diagnosisScore,
+                    recommended_plan: formData.recommendedPlan,
+                    diagnosis_answers: formData.answers,
+                    timestamp: formData.timestamp
+                }
+            ).then(
+                function(response) {
+                    alert('お申し込みありがとうございます。\n3営業日以内に担当者よりご連絡いたします。');
+                    document.getElementById('companyName').value = '';
+                    document.getElementById('contactName').value = '';
+                    document.getElementById('email').value = '';
+                    document.getElementById('phone').value = '';
+                    document.getElementById('message').value = '';
+                },
+                function(error) {
+                    alert('送信に失敗しました。お手数ですが、メールでお問い合わせください。\nmiraigoto34@gmail.com');
+                    console.error('EmailJS error:', error);
+                }
+            ).finally(
+                function() {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '詳細打合せを申し込む';
+                }
+            );
+        }
+        
+        function getPlanFromScore() {
+            const scoreText = document.getElementById('scoreText').textContent;
+            const score = parseInt(scoreText.replace('%', ''));
+            
+            if (score >= 75) {
+                return 'プレミアムプラン';
+            } else if (score >= 50) {
+                return 'スタンダードプラン';
+            } else {
+                return 'ライトプラン';
+            }
+        }
+        
+        function getAnswersText() {
+            const questions = [
+                '従業員数',
+                '現在の満足度', 
+                'イベント開催頻度',
+                'イベント形式',
+                'イベント課題',
+                'リモートワーク状況',
+                '採用課題',
+                '年間予算',
+                '新企画への関心',
+                '映像制作への関心'
+            ];
+            
+            let answersText = '';
+            Object.keys(answers).forEach(q => {
+                const questionIndex = parseInt(q) - 1;
+                answersText += `${questions[questionIndex]}: ${getAnswerText(q, answers[q])}\n`;
+            });
+            
+            return answersText;
+        }
+        
+        function getAnswerText(questionNum, value) {
+            const answerTexts = {
+                '1': ['10名以下', '11-30名', '31-100名', '101名以上'],
+                '2': ['非常に満足', 'まあ満足', 'やや不満', '大いに不満'],
+                '3': ['開催していない', '年1-2回', '年3-6回', '月1回以上'],
+                '4': ['飲み会・懇親会', 'ボーリング・カラオケ', 'スポーツ系', '決まった形式なし'],
+                '5': ['参加率が低い', 'マンネリ化', '準備の負担大', '効果が感じられない'],
+                '6': ['完全出社制', 'ハイブリッド', '原則リモート', '部署により異なる'],
+                '7': ['応募者が少ない', '企業文化が伝わらない', '定着率が低い', '特に課題なし'],
+                '8': ['20万円未満', '20-50万円', '50-100万円', '100万円以上'],
+                '9': ['非常に関心あり', 'やや関心あり', 'あまり関心なし', '現状維持で十分'],
+                '10': ['非常に関心あり', 'やや関心あり', 'あまり関心なし', '不要']
+            };
+            
+            return answerTexts[questionNum] ? answerTexts[questionNum][value - 1] : value;
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('option')) {
+                const question = e.target.closest('.question');
+                const questionNumber = question.dataset.question;
+                
+                question.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+                
+                e.target.classList.add('selected');
+                
+                answers[questionNumber] = e.target.dataset.value;
+                
+                document.getElementById('nextBtn').disabled = false;
+            }
+        });
+        
+        updateProgress();
+    </script>
+</body>
+</html>
